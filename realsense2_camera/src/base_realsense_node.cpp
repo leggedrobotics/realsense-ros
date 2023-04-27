@@ -1635,6 +1635,28 @@ void BaseRealSenseNode::frame_callback(rs2::frame frame)
     try{
         double frame_time = frame.get_timestamp();
 
+        // Here are the different timestamp options as described in the librealsense documentation:
+        // typedef enum rs2_timestamp_domain
+        // {
+        //     RS2_TIMESTAMP_DOMAIN_HARDWARE_CLOCK, /**< Frame timestamp was measured in relation to the camera clock */
+        //     RS2_TIMESTAMP_DOMAIN_SYSTEM_TIME,    /**< Frame timestamp was measured in relation to the OS system clock */
+        //     RS2_TIMESTAMP_DOMAIN_GLOBAL_TIME,    /**< Frame timestamp was measured in relation to the camera clock and converted to OS system clock by constantly measure the difference*/
+        //     RS2_TIMESTAMP_DOMAIN_COUNT           /**< Number of enumeration values. Not a valid input: intended to be used in for-loops. */
+        // } rs2_timestamp_domain;
+        auto timeStampDomain = frame.get_frame_timestamp_domain();
+        if (timeStampDomain == RS2_TIMESTAMP_DOMAIN_HARDWARE_CLOCK){
+            ROS_ERROR_STREAM_THROTTLE(5.0, "frame_callback: RS2_TIMESTAMP_DOMAIN_HARDWARE_CLOCK, On the L515, the hardware clock drifts. Use the global time option instead.");
+        }
+        else if (timeStampDomain == RS2_TIMESTAMP_DOMAIN_SYSTEM_TIME){
+            ROS_WARN_STREAM_THROTTLE(5.0, "frame_callback: RS2_TIMESTAMP_DOMAIN_SYSTEM_TIME. Not ideal, better use global time option for timestamping.");
+        }
+        else if (timeStampDomain == RS2_TIMESTAMP_DOMAIN_GLOBAL_TIME){
+            ROS_INFO_STREAM_THROTTLE(5.0, "frame_callback: RS2_TIMESTAMP_DOMAIN_GLOBAL_TIME");
+        }
+        else{
+            ROS_WARN_STREAM_THROTTLE(5.0, "frame_callback: unknown domain");
+        }
+
         // We compute a ROS timestamp which is based on an initial ROS time at point of first frame,
         // and the incremental timestamp from the camera.
         // In sync mode the timestamp is based on ROS time
