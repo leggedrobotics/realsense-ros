@@ -1645,7 +1645,6 @@ void BaseRealSenseNode::frame_callback(rs2::frame frame)
         }
 
         ros::Time t(frameSystemTimeSec(frame));
-        t = ros::Time::now();
         if (frame.is<rs2::frameset>())
         {
             ROS_DEBUG("Frameset arrived.");
